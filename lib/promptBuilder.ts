@@ -48,12 +48,12 @@ FRIEND APPEARANCE (stylistic variation only):
 `
     : "";
 
-  const sceneBlock = `
+const sceneBlock = `
 SCENE DESCRIPTION:
-Setting: ${scene.setting}
-Action: ${scene.action}
-${scene.composition ? `Composition: ${scene.composition}` : ""}
-${scene.mood ? `Mood: ${scene.mood}` : ""}
+Setting: ${"setting" in scene ? scene.setting : ""}
+Action: ${"action" in scene ? scene.action : ""}
+${"composition" in scene && scene.composition ? `Composition: ${scene.composition}` : ""}
+${"mood" in scene && scene.mood ? `Mood: ${scene.mood}` : ""}
 `;
 
   return `
