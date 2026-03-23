@@ -1,6 +1,6 @@
 // app/lib/promptBuilder.ts
 
-import { IllustrationScene, IllustrationRole } from "./illustrations";
+import { IllustrationScene } from "./illustrations";
 
 type Appearance = {
   hairColor: string;
