@@ -170,87 +170,154 @@ export default function Builder() {
   if (!storyData) return;
 
   try {
+    const allImages: Record<number, string> = {};
+
     const hair = heroAppearance.hairColor || "brown";
     const eyes = heroAppearance.eyeColor || "brown";
 
+    for (let i = 0; i < storyData.pages.length; i++) {
+      const imagePath = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
+      allImages[i] = imagePath;
+    }
+
+    const baseUrl = window.location.origin;
+
     const fullHtml = `
-      <!DOCTYPE html>
-      <html lang="bg">
-      <head>
-        <meta charset="UTF-8" />
-        <title>${storyData.title}</title>
-        <style>
-          @page {
-            size: A4 landscape;
-            margin: 0;
-          }
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8" />
+<base href="${baseUrl}/" />
 
-          html, body {
-            margin: 0;
-            padding: 0;
-            background: white;
-            font-family: "Segoe UI", Arial, sans-serif;
-          }
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
 
-          .pdf-page {
-            width: 297mm;
-            height: 210mm;
-            box-sizing: border-box;
-            page-break-after: always;
-            break-after: page;
-            overflow: hidden;
-            background: white;
-          }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-family: "DejaVu Sans", Arial, sans-serif;
+  }
 
-          .text-page {
-            padding: 18mm;
-            color: #222;
-          }
+  * {
+    box-sizing: border-box;
+  }
 
-          .image-page {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 18mm;
-          }
+  .pdf-page {
+    break-after: page;
+    page-break-after: always;
+    box-sizing: border-box;
+    width: 210mm;
+    height: 297mm;
+    padding: 20mm;
+    overflow: hidden;
+    background: white;
+  }
 
-          .image-page img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-          }
+  .cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
 
-          h1, h2, h3, p {
-            margin-top: 0;
-          }
-        </style>
-      </head>
-      <body>
-        ${storyData.pages
-          .map((page, i) => {
-            const imageSrc = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
-            const fallbackSrc = `/illustrations/${storyType}/${i}/placeholder.png`;
+  .cover-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
-            return `
-              <div class="pdf-page text-page">
-                ${page.html}
-              </div>
-              <div class="pdf-page image-page">
-                <img
-                  src="${imageSrc}"
-                  onerror="this.onerror=null;this.src='${fallbackSrc}'"
-                  alt=""
-                />
-              </div>
-            `;
-          })
-          .join("")}
-      </body>
-      </html>
+  .cover-inner h1 {
+    font-size: 42px;
+    margin: 0 0 24px 0;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .cover-inner p {
+    font-size: 20px;
+    margin: 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .text-page {
+    width: 210mm;
+    height: 297mm;
+    padding: 20mm 18mm;
+    box-sizing: border-box;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #222;
+  }
+
+  .text-page h1,
+  .text-page h2,
+  .text-page h3 {
+    margin-top: 0;
+    margin-bottom: 14px;
+    line-height: 1.25;
+  }
+
+  .text-page p {
+    margin-top: 0;
+    margin-bottom: 14px;
+  }
+
+  .image-page {
+    width: 210mm;
+    height: 297mm;
+    padding: 20mm 18mm;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .image-page img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+</style>
+</head>
+
+<body>
+${storyData.pages
+  .map((page, i) => {
+    const textPage = `
+      <div class="pdf-page text-page">
+        ${page.html}
+      </div>
     `;
 
-    const printWindow = window.open("", "_blank", "width=1400,height=900");
+    const imagePage = allImages[i]
+      ? `
+        <div class="pdf-page image-page">
+          <img
+            src="${allImages[i]}"
+            onerror="this.onerror=null;this.src='/illustrations/${storyType}/${i}/placeholder.png'"
+            alt=""
+          />
+        </div>
+      `
+      : "";
+
+    return textPage + imagePage;
+  })
+  .join("")}
+</body>
+</html>
+`;
+
+    const printWindow = window.open("", "_blank", "width=1200,height=900");
 
     if (!printWindow) {
       alert("Браузърът блокира новия прозорец. Разреши pop-up и опитай пак.");
@@ -272,6 +339,7 @@ export default function Builder() {
     alert("Грешка при подготвяне на PDF");
   }
 }
+
   /* ===== Render ===== */
   return (
     <div
