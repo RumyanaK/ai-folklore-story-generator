@@ -167,135 +167,111 @@ export default function Builder() {
 
   /* ===== PDF ===== */
   async function downloadPdf() {
-    if (!storyData) return;
+  if (!storyData) return;
 
-    setPdfLoading(true);
+  try {
+    const hair = heroAppearance.hairColor || "brown";
+    const eyes = heroAppearance.eyeColor || "brown";
 
-    let pdfRoot: HTMLDivElement | null = null;
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html lang="bg">
+      <head>
+        <meta charset="UTF-8" />
+        <title>${storyData.title}</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
 
-    try {
-      const html2pdf = (await import("html2pdf.js")).default;
+          html, body {
+            margin: 0;
+            padding: 0;
+            background: white;
+            font-family: "Segoe UI", Arial, sans-serif;
+          }
 
-      const hair = heroAppearance.hairColor || "brown";
-      const eyes = heroAppearance.eyeColor || "brown";
+          .pdf-page {
+            width: 297mm;
+            height: 210mm;
+            box-sizing: border-box;
+            page-break-after: always;
+            break-after: page;
+            overflow: hidden;
+            background: white;
+          }
 
-      pdfRoot = document.createElement("div");
-      pdfRoot.id = "pdf-export-root";
+          .text-page {
+            padding: 18mm;
+            color: #222;
+          }
 
-      Object.assign(pdfRoot.style, {
-        position: "absolute",
-        left: "0",
-        top: "0",
-        width: "297mm",
-        background: "white",
-        zIndex: "-1",
-        opacity: "1",
-        pointerEvents: "none",
-      });
+          .image-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18mm;
+          }
 
-      for (let i = 0; i < storyData.pages.length; i++) {
-        const textPage = document.createElement("div");
-        textPage.className = "pdf-export-page";
-        textPage.innerHTML = storyData.pages[i].html;
+          .image-page img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+          }
 
-        Object.assign(textPage.style, {
-          width: "297mm",
-          height: "210mm",
-          boxSizing: "border-box",
-          padding: "18mm",
-          background: "white",
-          overflow: "hidden",
-          pageBreakAfter: "always",
-          breakAfter: "page",
-          fontFamily: "Segoe UI, Arial, sans-serif",
-          color: "#222",
-        });
+          h1, h2, h3, p {
+            margin-top: 0;
+          }
+        </style>
+      </head>
+      <body>
+        ${storyData.pages
+          .map((page, i) => {
+            const imageSrc = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
+            const fallbackSrc = `/illustrations/${storyType}/${i}/placeholder.png`;
 
-        const imagePage = document.createElement("div");
-        imagePage.className = "pdf-export-page";
+            return `
+              <div class="pdf-page text-page">
+                ${page.html}
+              </div>
+              <div class="pdf-page image-page">
+                <img
+                  src="${imageSrc}"
+                  onerror="this.onerror=null;this.src='${fallbackSrc}'"
+                  alt=""
+                />
+              </div>
+            `;
+          })
+          .join("")}
+      </body>
+      </html>
+    `;
 
-        Object.assign(imagePage.style, {
-          width: "297mm",
-          height: "210mm",
-          boxSizing: "border-box",
-          padding: "18mm",
-          background: "white",
-          overflow: "hidden",
-          pageBreakAfter: "always",
-          breakAfter: "page",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        });
+    const printWindow = window.open("", "_blank", "width=1400,height=900");
 
-        const img = document.createElement("img");
-        img.alt = "";
-        img.src = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
-
-        Object.assign(img.style, {
-          maxWidth: "100%",
-          maxHeight: "100%",
-          objectFit: "contain",
-          display: "block",
-        });
-
-        img.onerror = () => {
-          img.src = `/illustrations/${storyType}/${i}/placeholder.png`;
-        };
-
-        imagePage.appendChild(img);
-        pdfRoot.appendChild(textPage);
-        pdfRoot.appendChild(imagePage);
-      }
-
-      document.body.appendChild(pdfRoot);
-
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const images = Array.from(pdfRoot.querySelectorAll("img"));
-      await Promise.all(
-        images.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete) {
-                resolve();
-              } else {
-                img.onload = () => resolve();
-                img.onerror = () => resolve();
-              }
-            })
-        )
-      );
-
-      const pdfOptions = {
-        margin: 0,
-        filename: `${storyData.title}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "landscape",
-        },
-      } as any;
-
-      await html2pdf().set(pdfOptions).from(pdfRoot).save();
-    } catch (err) {
-      console.error("PDF CLIENT ERROR:", err);
-      alert("Грешка при създаване на PDF");
-    } finally {
-      if (pdfRoot && document.body.contains(pdfRoot)) {
-        document.body.removeChild(pdfRoot);
-      }
-      setPdfLoading(false);
+    if (!printWindow) {
+      alert("Браузърът блокира новия прозорец. Разреши pop-up и опитай пак.");
+      return;
     }
-  }
 
+    printWindow.document.open();
+    printWindow.document.write(fullHtml);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 700);
+    };
+  } catch (err) {
+    console.error("PDF PRINT ERROR:", err);
+    alert("Грешка при подготвяне на PDF");
+  }
+}
   /* ===== Render ===== */
   return (
     <div
