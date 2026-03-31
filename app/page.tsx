@@ -177,7 +177,6 @@ export default function HomePage() {
       textAlign: "center",
     }}
   >
-    ✨ {storiesCount.toLocaleString("bg-BG")} приказки генерирани до сега
   </div>
 )}
 
