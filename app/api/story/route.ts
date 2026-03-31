@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { girlKindnessTemplate } from "@/app/templates/girl-kindness";
-import { incrementStoriesCreated } from "@/lib/counter";
 import { PageId } from "@/lib/pages";
 
 /* ===============================
@@ -52,38 +51,20 @@ export async function POST(req: Request) {
       );
     }
 
-    /* ===============================
-       1️⃣ Генерираме целия HTML
-       =============================== */
-
     const fullHtml = fillTemplate(girlKindnessTemplate, {
       heroName,
       friendName,
     });
-
-    /* ===============================
-       2️⃣ Разбиваме на <section class="page">
-       =============================== */
 
     const rawPages = fullHtml
       .split('<section class="page">')
       .filter(Boolean)
       .map((p) => `<section class="page">${p}`);
 
-      const pages: StoryPage[] = rawPages.map((html, index) => ({
-        html,
-        pageId: String(index) as PageId,
-      }));
-
-    /* ===============================
-       3️⃣ Увеличаваме брояча
-       =============================== */
-
-    await incrementStoriesCreated();
-
-    /* ===============================
-       4️⃣ Връщаме резултата
-       =============================== */
+    const pages: StoryPage[] = rawPages.map((html, index) => ({
+      html,
+      pageId: String(index) as PageId,
+    }));
 
     return NextResponse.json({
       title: `Добрината на ${escapeHtml(heroName)}`,
