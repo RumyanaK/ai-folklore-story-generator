@@ -105,8 +105,7 @@ export default function Builder() {
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState("");
-  const [storiesCount] = useState<number | null>(null);
-
+  
   /* ===== Story ===== */
   async function createStory() {
     if (heroGender === "boy") {
@@ -168,6 +167,8 @@ export default function Builder() {
   /* ===== PDF ===== */
   async function downloadPdf() {
   if (!storyData) return;
+
+  setPdfLoading(true);
 
   try {
     const allImages: Record<number, string> = {};
@@ -337,6 +338,8 @@ ${storyData.pages
   } catch (err) {
     console.error("PDF PRINT ERROR:", err);
     alert("Грешка при подготвяне на PDF");
+  } finally {
+    setPdfLoading(false);
   }
 }
 
@@ -364,20 +367,6 @@ ${storyData.pages
         }}
       >
         <h2 style={{ color: "#7a1f1f" }}>📘 Създай персонализирана приказка</h2>
-
-        {storiesCount !== null && (
-          <p
-            style={{
-              marginTop: 8,
-              marginBottom: 24,
-              color: "#3f7f4c",
-              fontSize: 14,
-              fontWeight: 500,
-            }}
-          >
-            ✨ Вече създадени <strong>{storiesCount}</strong> приказки
-          </p>
-        )}
 
         {!storyData && (
           <>
@@ -532,23 +521,32 @@ ${storyData.pages
             </div>
 
             <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 16,
-                marginTop: 30,
-              }}
-            >
-              <button onClick={resetStory} style={buttonStyle}>
-                🔄 Нова приказка
-              </button>
-              <button onClick={downloadPdf} style={buttonStyle} disabled={pdfLoading}>
-                {pdfLoading ? "⏳ Подготвям PDF..." : "🖨️ Запази като PDF"}
-              </button>
-              <p style={{ fontSize: 13, color: "#666", marginTop: 10 }}>
-                 Ще се отвори прозорец за печат. Избери <strong>Save as PDF</strong>.
-              </p>
-            </div>
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: 16,
+    marginTop: 30,
+    flexWrap: "wrap",
+  }}
+>
+      <button onClick={resetStory} style={buttonStyle}>
+        🔄 Нова приказка
+      </button>
+      <button onClick={downloadPdf} style={buttonStyle} disabled={pdfLoading}>
+        {pdfLoading ? "⏳ Подготвям PDF..." : "🖨️ Запази като PDF"}
+      </button>
+    </div>
+
+    <p
+      style={{
+        fontSize: 13,
+        color: "#666",
+        marginTop: 12,
+        textAlign: "center",
+      }}
+    >
+      Ще се отвори прозорец за печат. Изберте <strong>Save as PDF</strong>.
+    </p>
           </>
         )}
       </main>
