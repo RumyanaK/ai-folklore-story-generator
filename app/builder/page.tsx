@@ -543,8 +543,11 @@ ${storyData.pages
                 🔄 Нова приказка
               </button>
               <button onClick={downloadPdf} style={buttonStyle} disabled={pdfLoading}>
-                {pdfLoading ? "⏳ Подготвям PDF..." : "📄 Свали PDF"}
+                {pdfLoading ? "⏳ Подготвям PDF..." : "🖨️ Запази като PDF"}
               </button>
+              <p style={{ fontSize: 13, color: "#666", marginTop: 10 }}>
+                 Ще се отвори прозорец за печат. Избери <strong>Save as PDF</strong>.
+              </p>
             </div>
           </>
         )}
