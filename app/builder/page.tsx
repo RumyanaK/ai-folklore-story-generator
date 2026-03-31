@@ -20,7 +20,6 @@ type StoryData = {
   pages: StoryPage[];
 };
 
-
 /* ===== UI Components ===== */
 
 function AppearanceFields({
@@ -40,11 +39,11 @@ function AppearanceFields({
         }
         style={selectStyle}
       >
-       <option value="">Избери</option>
-      <option value="blonde">Руса</option>
-      <option value="brown">Кафява</option>
-      <option value="black">Черна</option>
-      <option value="red">Рижа</option>
+        <option value="">Избери</option>
+        <option value="blonde">Руса</option>
+        <option value="brown">Кафява</option>
+        <option value="black">Черна</option>
+        <option value="red">Рижа</option>
       </select>
 
       <label>Цвят на очите:</label>
@@ -99,21 +98,20 @@ export default function Builder() {
     eyeColor: "",
   });
 
-  const [storyType, setStoryType] = useState("kindness")
+  const [storyType, setStoryType] = useState("kindness");
   const [storyData, setStoryData] = useState<StoryData | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState("");
   const [storiesCount, setStoriesCount] = useState<number | null>(null);
 
-
-   /* ===== Story ===== */
+  /* ===== Story ===== */
   async function createStory() {
-
     if (heroGender === "boy") {
-    setError("🚧 Скоро: версия с герой момче");
-    return;
+      setError("🚧 Скоро: версия с герой момче");
+      return;
     }
 
     setError("");
@@ -127,198 +125,152 @@ export default function Builder() {
 
     setLoading(true);
 
-    const res = await fetch("/api/story", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    try {
+      const res = await fetch("/api/story", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          heroName,
+          friendName,
+          heroGender,
+          friendGender,
+        }),
+      });
 
-      // ✅ genders към API
-      body: JSON.stringify({ heroName, friendName, heroGender, friendGender }),
-    });
+      const data = await res.json();
 
-const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || "Грешка при създаване на приказката");
+        setLoading(false);
+        return;
+      }
 
-if (!res.ok) {
-  setError(data?.message || "Грешка при създаване на приказката");
-  setLoading(false);
-  return;
-}
-
-setStoryData(data);
-setLoading(false);
-
+      setStoryData(data);
+    } catch {
+      setError("Грешка при създаване на приказката");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function resetStory() {
     setStoryData(null);
     setCurrentPage(0);
+    setError("");
   }
 
   /* ===== PDF ===== */
   async function downloadPdf() {
     if (!storyData) return;
 
-    // 1) Вземаме всички илюстрации от API като imageUrl (по 1 на страница)
-    const allImages: Record<number, string> = {};
+    setPdfLoading(true);
+
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
 
       const hair = heroAppearance.hairColor || "brown";
       const eyes = heroAppearance.eyeColor || "brown";
 
-    for (let i = 0; i < storyData.pages.length; i++) {
-    const imagePath =
-      `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
+      const pdfRoot = document.createElement("div");
+      pdfRoot.style.background = "white";
+      pdfRoot.style.width = "297mm";
+      pdfRoot.style.padding = "0";
+      pdfRoot.style.margin = "0";
 
-allImages[i] = imagePath;
-    }
+      storyData.pages.forEach((page, i) => {
+        const textPage = document.createElement("div");
+        textPage.className = "pdf-export-page";
+        textPage.innerHTML = page.html;
 
-    const fullHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8" />
-<base href="http://localhost:3000/" />
+        Object.assign(textPage.style, {
+          width: "297mm",
+          height: "210mm",
+          boxSizing: "border-box",
+          padding: "18mm",
+          background: "white",
+          pageBreakAfter: "always",
+          breakAfter: "page",
+          overflow: "hidden",
+          fontFamily: "Segoe UI, Arial, sans-serif",
+          color: "#222",
+        } as CSSStyleDeclaration);
 
-<style>
-  @page {
-    size: A4;
-    margin: 20mm;
-  }
+        const imagePage = document.createElement("div");
+        imagePage.className = "pdf-export-page";
 
-  body {
-    margin: 0;
-    font-family: "DejaVu Sans", Arial, sans-serif;
-  }
+        Object.assign(imagePage.style, {
+          width: "297mm",
+          height: "210mm",
+          boxSizing: "border-box",
+          padding: "18mm",
+          background: "white",
+          pageBreakAfter: "always",
+          breakAfter: "page",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        } as CSSStyleDeclaration);
 
-.pdf-page {
-  break-after: page;
-  box-sizing: border-box;
-  width: 210mm;
-  height: 297mm;
-  padding: 20mm;
-  overflow: hidden;
-}
+        const img = document.createElement("img");
+        img.src = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
+        img.alt = "";
+        img.onerror = () => {
+          img.src = `/illustrations/${storyType}/${i}/placeholder.png`;
+        };
 
-  .cover {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
+        Object.assign(img.style, {
+          maxWidth: "100%",
+          maxHeight: "100%",
+          objectFit: "contain",
+        } as CSSStyleDeclaration);
 
-  .cover-inner {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+        imagePage.appendChild(img);
 
-  .cover-inner h1 {
-    font-size: 42px;
-    margin: 0 0 24px 0;
-    text-align: center;
-  }
+        pdfRoot.appendChild(textPage);
+        pdfRoot.appendChild(imagePage);
+      });
 
-  .cover-inner p {
-    font-size: 20px;
-    margin: 0;
-    text-align: center;
-  }
+      pdfRoot.style.position = "fixed";
+      pdfRoot.style.left = "-99999px";
+      pdfRoot.style.top = "0";
+      document.body.appendChild(pdfRoot);
 
-  .text-page {
-  width: 210mm;
-  height: 297mm;
-  padding: 20mm 18mm;
-  box-sizing: border-box;
+          const pdfOptions = {
+      margin: 0,
+      filename: `${storyData.title}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "landscape",
+      },
+      pagebreak: {
+        mode: ["css", "legacy"],
+      },
+    } as any;
 
-  font-size: 18px;
-  line-height: 1.6;
-  }
+await html2pdf().set(pdfOptions).from(pdfRoot).save();
 
-  .image-page {
-  width: 210mm;
-  height: 297mm;
-  padding: 20mm 18mm;
-  box-sizing: border-box;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  }
-
-  .image-page img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-</style>
-
-</head>
-
-<body>
-${storyData.pages
-  .map((page, i) => {
-    const isLastPage = i === storyData.pages.length - 1;
-
-    const textPage = `
-      <div class="pdf-page text-page">
-      ${page.html}
-      </div>
-    `;
-
-    const imagePage =
-      allImages[i]
-        ? `
-          <div class="pdf-page image-page">
-          <img
-            src="${allImages[i]}"
-            onerror="this.src='/illustrations/${storyType}/${i}/placeholder.png'"
-          />
-          </div>
-        `
-        : "";
-
-    return textPage + imagePage;
-  })
-  .join("")}
-
-</body>
-</html>
-`;
-
-    const res = await fetch("/api/pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        html: fullHtml,
-        title: storyData.title,
-      }),
-    });
-
-    if (!res.ok) {
+      document.body.removeChild(pdfRoot);
+    } catch (err) {
+      console.error("PDF CLIENT ERROR:", err);
       alert("Грешка при създаване на PDF");
-      return;
+    } finally {
+      setPdfLoading(false);
     }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${storyData.title}.pdf`;
-    a.click();
-
-    URL.revokeObjectURL(url);
   }
 
-function getIllustration(pageIndex: number) {
+  function getIllustration(pageIndex: number) {
+    const hair = heroAppearance.hairColor || "brown";
+    const eyes = heroAppearance.eyeColor || "brown";
 
-  const hair = heroAppearance.hairColor || "brown"
-  const eyes = heroAppearance.eyeColor || "brown"
-
- return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`
-
-}
+    return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`;
+  }
 
   /* ===== Render ===== */
   return (
@@ -331,7 +283,7 @@ function getIllustration(pageIndex: number) {
         padding: 40,
       }}
     >
-       <Header />
+      <Header />
 
       <main
         style={{
@@ -371,12 +323,12 @@ function getIllustration(pageIndex: number) {
                   marginBottom: 18,
                 }}
               >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHeroGender("girl");
-                      setError("");
-                    }}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHeroGender("girl");
+                    setError("");
+                  }}
                   style={{
                     ...navButtonStyle,
                     borderColor: heroGender === "girl" ? "#3f7f4c" : "#ccc",
@@ -387,12 +339,12 @@ function getIllustration(pageIndex: number) {
                   👧 Момиче
                 </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHeroGender("boy");
-                      setError("");
-                    }}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHeroGender("boy");
+                    setError("");
+                  }}
                   style={{
                     ...navButtonStyle,
                     borderColor: heroGender === "boy" ? "#3f7f4c" : "#ccc",
@@ -455,9 +407,9 @@ function getIllustration(pageIndex: number) {
               }}
             >
               <div
-dangerouslySetInnerHTML={{
-  __html: storyData.pages[currentPage].html,
-}}
+                dangerouslySetInnerHTML={{
+                  __html: storyData.pages[currentPage].html,
+                }}
               />
 
               <div
@@ -472,12 +424,10 @@ dangerouslySetInnerHTML={{
                   overflow: "hidden",
                 }}
               >
-  
                 <img
                   src={getIllustration(currentPage)}
                   onError={(e) => {
-                    e.currentTarget.src =
-                      `/illustrations/${storyType}/${currentPage}/placeholder.png`
+                    e.currentTarget.src = `/illustrations/${storyType}/${currentPage}/placeholder.png`;
                   }}
                   alt=""
                   style={{
@@ -524,8 +474,8 @@ dangerouslySetInnerHTML={{
               <button onClick={resetStory} style={buttonStyle}>
                 🔄 Нова приказка
               </button>
-              <button onClick={downloadPdf} style={buttonStyle}>
-                📄 Свали PDF
+              <button onClick={downloadPdf} style={buttonStyle} disabled={pdfLoading}>
+                {pdfLoading ? "⏳ Подготвям PDF..." : "📄 Свали PDF"}
               </button>
             </div>
           </>
