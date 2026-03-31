@@ -98,14 +98,14 @@ export default function Builder() {
     eyeColor: "",
   });
 
-  const [storyType, setStoryType] = useState("kindness");
+  const storyType = "kindness";
   const [storyData, setStoryData] = useState<StoryData | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState("");
-  const [storiesCount, setStoriesCount] = useState<number | null>(null);
+  const [storiesCount] = useState<number | null>(null);
 
   /* ===== Story ===== */
   async function createStory() {
@@ -141,7 +141,6 @@ export default function Builder() {
 
       if (!res.ok) {
         setError(data?.error || "Грешка при създаване на приказката");
-        setLoading(false);
         return;
       }
 
@@ -159,11 +158,20 @@ export default function Builder() {
     setError("");
   }
 
+  function getIllustration(pageIndex: number) {
+    const hair = heroAppearance.hairColor || "brown";
+    const eyes = heroAppearance.eyeColor || "brown";
+
+    return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`;
+  }
+
   /* ===== PDF ===== */
   async function downloadPdf() {
     if (!storyData) return;
 
     setPdfLoading(true);
+
+    let pdfRoot: HTMLDivElement | null = null;
 
     try {
       const html2pdf = (await import("html2pdf.js")).default;
@@ -171,16 +179,24 @@ export default function Builder() {
       const hair = heroAppearance.hairColor || "brown";
       const eyes = heroAppearance.eyeColor || "brown";
 
-      const pdfRoot = document.createElement("div");
-      pdfRoot.style.background = "white";
-      pdfRoot.style.width = "297mm";
-      pdfRoot.style.padding = "0";
-      pdfRoot.style.margin = "0";
+      pdfRoot = document.createElement("div");
+      pdfRoot.id = "pdf-export-root";
 
-      storyData.pages.forEach((page, i) => {
+      Object.assign(pdfRoot.style, {
+        position: "absolute",
+        left: "0",
+        top: "0",
+        width: "297mm",
+        background: "white",
+        zIndex: "-1",
+        opacity: "1",
+        pointerEvents: "none",
+      });
+
+      for (let i = 0; i < storyData.pages.length; i++) {
         const textPage = document.createElement("div");
         textPage.className = "pdf-export-page";
-        textPage.innerHTML = page.html;
+        textPage.innerHTML = storyData.pages[i].html;
 
         Object.assign(textPage.style, {
           width: "297mm",
@@ -188,12 +204,12 @@ export default function Builder() {
           boxSizing: "border-box",
           padding: "18mm",
           background: "white",
+          overflow: "hidden",
           pageBreakAfter: "always",
           breakAfter: "page",
-          overflow: "hidden",
           fontFamily: "Segoe UI, Arial, sans-serif",
           color: "#222",
-        } as CSSStyleDeclaration);
+        });
 
         const imagePage = document.createElement("div");
         imagePage.className = "pdf-export-page";
@@ -204,72 +220,80 @@ export default function Builder() {
           boxSizing: "border-box",
           padding: "18mm",
           background: "white",
+          overflow: "hidden",
           pageBreakAfter: "always",
           breakAfter: "page",
-          overflow: "hidden",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-        } as CSSStyleDeclaration);
+        });
 
         const img = document.createElement("img");
-        img.src = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
         img.alt = "";
-        img.onerror = () => {
-          img.src = `/illustrations/${storyType}/${i}/placeholder.png`;
-        };
+        img.src = `/illustrations/${storyType}/${i}/${heroGender}-${hair}-${eyes}.png`;
 
         Object.assign(img.style, {
           maxWidth: "100%",
           maxHeight: "100%",
           objectFit: "contain",
-        } as CSSStyleDeclaration);
+          display: "block",
+        });
+
+        img.onerror = () => {
+          img.src = `/illustrations/${storyType}/${i}/placeholder.png`;
+        };
 
         imagePage.appendChild(img);
-
         pdfRoot.appendChild(textPage);
         pdfRoot.appendChild(imagePage);
-      });
+      }
 
-      pdfRoot.style.position = "fixed";
-      pdfRoot.style.left = "-99999px";
-      pdfRoot.style.top = "0";
       document.body.appendChild(pdfRoot);
 
-          const pdfOptions = {
-      margin: 0,
-      filename: `${storyData.title}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "landscape",
-      },
-      pagebreak: {
-        mode: ["css", "legacy"],
-      },
-    } as any;
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-await html2pdf().set(pdfOptions).from(pdfRoot).save();
+      const images = Array.from(pdfRoot.querySelectorAll("img"));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) {
+                resolve();
+              } else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+              }
+            })
+        )
+      );
 
-      document.body.removeChild(pdfRoot);
+      const pdfOptions = {
+        margin: 0,
+        filename: `${storyData.title}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "landscape",
+        },
+      } as any;
+
+      await html2pdf().set(pdfOptions).from(pdfRoot).save();
     } catch (err) {
       console.error("PDF CLIENT ERROR:", err);
       alert("Грешка при създаване на PDF");
     } finally {
+      if (pdfRoot && document.body.contains(pdfRoot)) {
+        document.body.removeChild(pdfRoot);
+      }
       setPdfLoading(false);
     }
-  }
-
-  function getIllustration(pageIndex: number) {
-    const hair = heroAppearance.hairColor || "brown";
-    const eyes = heroAppearance.eyeColor || "brown";
-
-    return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`;
   }
 
   /* ===== Render ===== */
@@ -426,7 +450,7 @@ await html2pdf().set(pdfOptions).from(pdfRoot).save();
               >
                 <img
                   src={getIllustration(currentPage)}
-                  onError={(e) => {
+                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                     e.currentTarget.src = `/illustrations/${storyType}/${currentPage}/placeholder.png`;
                   }}
                   alt=""
