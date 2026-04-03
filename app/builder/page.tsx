@@ -93,7 +93,7 @@ export default function Builder() {
   const [heroName, setHeroName] = useState("");
   const [friendName, setFriendName] = useState("");
   const [heroGender, setHeroGender] = useState<"girl" | "boy">("girl");
-  const friendGender: "girl" | "boy" = heroGender === "girl" ? "boy" : "girl";
+  const [friendGender, setFriendGender] = useState<"girl" | "boy">("boy");
 
   const [heroAppearance, setHeroAppearance] = useState<Appearance>({
     hairColor: "",
@@ -547,23 +547,49 @@ ${storyData.pages
             </CharacterBlock>
 
             <CharacterBlock title="🧒 Приятел">
-              <label>Пол:</label>
-              <div style={{ marginTop: 6, marginBottom: 18, color: "#444" }}>
-                <strong>
-                  {friendGender === "boy" ? "🧒 Момче" : "👧 Момиче"}{" "}
-                </strong>
-                <span style={{ color: "#777" }}>
-                  🔒 (заключено според героя)
-                </span>
-              </div>
+            <label>Пол:</label>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                marginTop: 6,
+                marginBottom: 18,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setFriendGender("girl")}
+                style={{
+                  ...navButtonStyle,
+                  borderColor: friendGender === "girl" ? "#3f7f4c" : "#ccc",
+                  color: friendGender === "girl" ? "#3f7f4c" : "#666",
+                  opacity: friendGender === "girl" ? 1 : 0.8,
+                }}
+              >
+                👧 Момиче
+              </button>
 
-              <label>Име:</label>
-              <input
-                value={friendName}
-                onChange={(e) => setFriendName(e.target.value)}
-                style={inputStyle}
-              />
-            </CharacterBlock>
+              <button
+                type="button"
+                onClick={() => setFriendGender("boy")}
+                style={{
+                  ...navButtonStyle,
+                  borderColor: friendGender === "boy" ? "#3f7f4c" : "#ccc",
+                  color: friendGender === "boy" ? "#3f7f4c" : "#666",
+                  opacity: friendGender === "boy" ? 1 : 0.8,
+                }}
+              >
+                🧒 Момче
+              </button>
+            </div>
+
+            <label>Име:</label>
+            <input
+              value={friendName}
+              onChange={(e) => setFriendName(e.target.value)}
+              style={inputStyle}
+            />
+          </CharacterBlock>
 
             <button onClick={createStory} style={buttonStyle}>
               🌟 Създай моята книжка
