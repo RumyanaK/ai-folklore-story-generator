@@ -2,6 +2,7 @@
 
 import Header from "@/app/components/Header";
 import React, { useState } from "react";
+import { ArchetypeId } from "@/lib/archetypes/types";
 
 /* ===== Types ===== */
 
@@ -98,7 +99,8 @@ export default function Builder() {
     eyeColor: "",
   });
 
-  const storyType = "kindness";
+  const [archetypeId] = useState<ArchetypeId>("kindness");
+  const storyType = archetypeId;
   const [storyData, setStoryData] = useState<StoryData | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -129,6 +131,7 @@ export default function Builder() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          archetypeId,
           heroName,
           friendName,
           heroGender,
