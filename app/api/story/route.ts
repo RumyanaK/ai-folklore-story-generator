@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { girlKindnessTemplate } from "@/app/templates/girl-kindness";
+import { kindnessTemplate } from "@/app/templates/kindness";
 import { PageId } from "@/lib/pages";
 import { loadStoryTemplate, getArchetypeConfig } from "@/lib/story/storyLoader";
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    let template = girlKindnessTemplate;
+    let template = kindnessTemplate;
     let title = `Добрината на ${escapeHtml(heroName)}`;
 
     if (archetypeId) {

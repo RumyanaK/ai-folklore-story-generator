@@ -1,4 +1,4 @@
-export const girlKindnessTemplate = `
+export const kindnessTemplate = `
 <style>
 .page {
   width: 100%;
