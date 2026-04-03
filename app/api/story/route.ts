@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { girlKindnessTemplate } from "@/app/templates/girl-kindness";
 import { PageId } from "@/lib/pages";
+import { loadStoryTemplate, getArchetypeConfig } from "@/lib/story/storyLoader";
 
 /* ===============================
    Types
@@ -42,7 +43,7 @@ function fillTemplate(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { heroName, friendName } = body;
+    const { archetypeId, heroName, friendName } = body;
 
     if (!heroName || !friendName) {
       return NextResponse.json(
@@ -51,7 +52,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const fullHtml = fillTemplate(girlKindnessTemplate, {
+    let template = girlKindnessTemplate;
+    let title = `Добрината на ${escapeHtml(heroName)}`;
+
+    if (archetypeId) {
+      template = await loadStoryTemplate(archetypeId);
+
+      const archetypeConfig = getArchetypeConfig(archetypeId);
+      title =
+        archetypeConfig.id === "kindness"
+          ? `Добрината на ${escapeHtml(heroName)}`
+          : `${archetypeConfig.title} — ${escapeHtml(heroName)}`;
+    }
+
+    const fullHtml = fillTemplate(template, {
       heroName,
       friendName,
     });
@@ -67,7 +81,7 @@ export async function POST(req: Request) {
     }));
 
     return NextResponse.json({
-      title: `Добрината на ${escapeHtml(heroName)}`,
+      title,
       pages,
     });
   } catch (err) {
