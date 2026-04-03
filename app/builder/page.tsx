@@ -312,7 +312,7 @@ ${storyData.pages
         <div class="pdf-page image-page">
           <img
             src="${allImages[i]}"
-            onerror="this.onerror=null;this.src='/illustrations/${storyType}/${i}/placeholder.png'"
+            onerror="this.onerror=null;this.src='/illustrations/${storyType}/${i}/placeholder-${heroGender}.png'"
             alt=""
           />
         </div>
