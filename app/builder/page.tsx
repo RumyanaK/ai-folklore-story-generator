@@ -3,6 +3,7 @@
 import Header from "@/app/components/Header";
 import React, { useState } from "react";
 import { ArchetypeId } from "@/lib/archetypes/types";
+import { archetypes } from "@/lib/archetypes/config";
 
 /* ===== Types ===== */
 
@@ -99,7 +100,7 @@ export default function Builder() {
     eyeColor: "",
   });
 
-  const [archetypeId] = useState<ArchetypeId>("kindness");
+  const [archetypeId, setArchetypeId] = useState<ArchetypeId>("kindness");
   const storyType = archetypeId;
   const [storyData, setStoryData] = useState<StoryData | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -373,6 +374,67 @@ ${storyData.pages
 
         {!storyData && (
           <>
+                    <CharacterBlock title="🪄 Избери тип приказка">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 14,
+                marginTop: 10,
+              }}
+            >
+              {Object.values(archetypes).map((archetype) => {
+                const isSelected = archetypeId === archetype.id;
+
+                return (
+                  <button
+                    key={archetype.id}
+                    type="button"
+                    onClick={() => setArchetypeId(archetype.id as ArchetypeId)}
+                    style={{
+                      textAlign: "left",
+                      padding: 18,
+                      borderRadius: 16,
+                      border: isSelected ? "2px solid #3f7f4c" : "1px solid #d8d8d8",
+                      background: isSelected ? "#f3fbf4" : "white",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: "#2f4f35",
+                        marginBottom: 6,
+                      }}
+                    >
+                      {archetype.title}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 14,
+                        color: "#7a1f1f",
+                        marginBottom: 8,
+                      }}
+                    >
+                      ({archetype.secondaryThemes.join(", ")})
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 15,
+                        color: "#444",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {archetype.shortDescription}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CharacterBlock>
             <CharacterBlock title="👧 Герой">
               <label>Пол:</label>
               <div
