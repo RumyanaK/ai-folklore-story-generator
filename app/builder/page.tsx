@@ -408,15 +408,41 @@ ${storyData.pages
                     }}
                   >
                     <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 12,
+                      marginBottom: 6,
+                    }}
+                  >
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#2f4f35",
+                    }}
+                  >
+                    {archetype.title}
+                  </div>
+
+                  {isSelected && (
+                    <span
                       style={{
-                        fontSize: 18,
+                        display: "inline-block",
+                        padding: "6px 12px",
+                        borderRadius: 999,
+                        background: "#dff3e3",
+                        color: "#2d6a39",
+                        fontSize: 12,
                         fontWeight: 700,
-                        color: "#2f4f35",
-                        marginBottom: 6,
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {archetype.title}
-                    </div>
+                      Избрано
+                    </span>
+                  )}
+                </div>
 
                     <div
                       style={{
