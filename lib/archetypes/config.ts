@@ -24,7 +24,7 @@ export const archetypes: Record<string, ArchetypeConfig> = {
     endingText:
       "[heroName] разбра, че смелостта не е да не се страхуваш, а да направиш правилното, дори когато е трудно.",
     illustrationPlan: "couragePlan",
-    isAvailable: false,
+    isAvailable: true,
   },
 
   wisdom: {
