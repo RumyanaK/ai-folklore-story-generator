@@ -11,6 +11,7 @@ export const archetypes: Record<string, ArchetypeConfig> = {
     endingText:
       "[heroName] разбра, че понякога най-голямата сила се крие в доброто сърце.",
     illustrationPlan: "kindnessPlan",
+    isAvailable: true,
   },
 
   courage: {
@@ -23,6 +24,7 @@ export const archetypes: Record<string, ArchetypeConfig> = {
     endingText:
       "[heroName] разбра, че смелостта не е да не се страхуваш, а да направиш правилното, дори когато е трудно.",
     illustrationPlan: "couragePlan",
+    isAvailable: false,
   },
 
   wisdom: {
@@ -35,5 +37,6 @@ export const archetypes: Record<string, ArchetypeConfig> = {
     endingText:
       "[heroName] научи, че умът и добротата често побеждават там, където силата не успява.",
     illustrationPlan: "wisdomPlan",
+    isAvailable: false,
   },
 };
