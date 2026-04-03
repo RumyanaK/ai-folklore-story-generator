@@ -385,19 +385,26 @@ ${storyData.pages
             >
               {Object.values(archetypes).map((archetype) => {
                 const isSelected = archetypeId === archetype.id;
+                const isAvailable = archetype.id === "kindness";
 
                 return (
                   <button
                     key={archetype.id}
                     type="button"
-                    onClick={() => setArchetypeId(archetype.id as ArchetypeId)}
+                    disabled={!isAvailable}
+                    onClick={() => {
+                      if (isAvailable) {
+                        setArchetypeId(archetype.id as ArchetypeId);
+                      }
+                    }}
                     style={{
                       textAlign: "left",
                       padding: 18,
                       borderRadius: 16,
                       border: isSelected ? "2px solid #3f7f4c" : "1px solid #d8d8d8",
                       background: isSelected ? "#f3fbf4" : "white",
-                      cursor: "pointer",
+                      opacity: isAvailable ? 1 : 0.65,
+                      cursor: isAvailable ? "pointer" : "not-allowed",
                     }}
                   >
                     <div
@@ -430,6 +437,22 @@ ${storyData.pages
                     >
                       {archetype.shortDescription}
                     </div>
+                    {!isAvailable && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          display: "inline-block",
+                          padding: "6px 12px",
+                          borderRadius: 999,
+                          background: "#f5e9cf",
+                          color: "#8a5a00",
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Очаквайте скоро.
+                      </div>
+                    )}
                   </button>
                 );
               })}
