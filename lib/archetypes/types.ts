@@ -11,4 +11,5 @@ export type ArchetypeConfig = {
   templateFile: string;
   endingText: string;
   illustrationPlan: string;
+  isAvailable: boolean;
 };
