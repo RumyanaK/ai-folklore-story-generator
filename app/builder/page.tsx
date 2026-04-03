@@ -385,7 +385,7 @@ ${storyData.pages
             >
               {Object.values(archetypes).map((archetype) => {
                 const isSelected = archetypeId === archetype.id;
-                const isAvailable = archetype.id === "kindness";
+                const isAvailable = archetype.isAvailable;
 
                 return (
                   <button
