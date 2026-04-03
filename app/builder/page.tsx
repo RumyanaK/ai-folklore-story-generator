@@ -440,17 +440,24 @@ ${storyData.pages
                     {!isAvailable && (
                       <div
                         style={{
-                          marginTop: 10,
-                          display: "inline-block",
-                          padding: "6px 12px",
-                          borderRadius: 999,
-                          background: "#f5e9cf",
-                          color: "#8a5a00",
-                          fontSize: 13,
-                          fontWeight: 700,
+                          marginTop: 14,
+                          display: "flex",
+                          justifyContent: "center",
                         }}
                       >
-                        Очаквайте скоро.
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "6px 12px",
+                            borderRadius: 999,
+                            background: "#f5e9cf",
+                            color: "#8a5a00",
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Очаквайте скоро
+                        </span>
                       </div>
                     )}
                   </button>
