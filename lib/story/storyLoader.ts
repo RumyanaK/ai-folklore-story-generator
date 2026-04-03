@@ -1,4 +1,5 @@
 import { archetypes } from "@/lib/archetypes/config";
+import { storyTemplates } from "@/lib/story/templateRegistry";
 
 export function getArchetypeConfig(archetypeId: string) {
   const config = archetypes[archetypeId];
@@ -13,17 +14,12 @@ export function getArchetypeConfig(archetypeId: string) {
 export async function loadStoryTemplate(archetypeId: string) {
   const config = getArchetypeConfig(archetypeId);
 
-  switch (config.id) {
-    case "kindness":
-      return (await import("@/app/templates/girl-kindness")).girlKindnessTemplate;
+  const template =
+    storyTemplates[config.id as keyof typeof storyTemplates];
 
-    case "courage":
-      throw new Error("Courage template not implemented yet");
-
-    case "wisdom":
-      throw new Error("Wisdom template not implemented yet");
-
-    default:
-      throw new Error(`Template not found for archetype: ${archetypeId}`);
+  if (!template) {
+    throw new Error(`Template not found for archetype: ${archetypeId}`);
   }
+
+  return template;
 }
