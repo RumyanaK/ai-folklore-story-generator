@@ -161,12 +161,16 @@ export default function Builder() {
     setError("");
   }
 
-  function getIllustration(pageIndex: number) {
-    const hair = heroAppearance.hairColor || "brown";
-    const eyes = heroAppearance.eyeColor || "brown";
+function getIllustration(pageIndex: number) {
+  const hair = heroAppearance.hairColor || "brown";
+  const eyes = heroAppearance.eyeColor || "brown";
 
-    return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`;
-  }
+  return `/illustrations/${storyType}/${pageIndex}/${heroGender}-${hair}-${eyes}.png`;
+}
+
+function getPlaceholderIllustration(pageIndex: number) {
+  return `/illustrations/${storyType}/${pageIndex}/placeholder-${heroGender}.png`;
+}
 
   /* ===== PDF ===== */
   async function downloadPdf() {
@@ -631,7 +635,7 @@ ${storyData.pages
                 <img
                   src={getIllustration(currentPage)}
                   onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                    e.currentTarget.src = `/illustrations/${storyType}/${currentPage}/placeholder.png`;
+                    e.currentTarget.src = getPlaceholderIllustration(currentPage);
                   }}
                   alt=""
                   style={{
