@@ -1,6 +1,8 @@
 import { archetypes } from "@/lib/archetypes/config";
 import { storyTemplates } from "@/lib/story/templateRegistry";
 
+type Gender = "girl" | "boy";
+
 export function getArchetypeConfig(archetypeId: string) {
   const config = archetypes[archetypeId];
 
@@ -11,15 +13,23 @@ export function getArchetypeConfig(archetypeId: string) {
   return config;
 }
 
-export async function loadStoryTemplate(archetypeId: string) {
+export async function loadStoryTemplate(
+  archetypeId: string,
+  heroGender: Gender,
+  friendGender: Gender
+) {
   const config = getArchetypeConfig(archetypeId);
 
-  const template =
+  const templateOrGetter =
     storyTemplates[config.id as keyof typeof storyTemplates];
 
-  if (!template) {
+  if (!templateOrGetter) {
     throw new Error(`Template not found for archetype: ${archetypeId}`);
   }
 
-  return template;
+  if (typeof templateOrGetter === "function") {
+    return templateOrGetter(heroGender, friendGender);
+  }
+
+  return templateOrGetter;
 }

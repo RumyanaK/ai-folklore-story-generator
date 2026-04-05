@@ -1,7 +1,7 @@
-import { kindnessTemplate } from "@/app/templates/kindness";
+import { getKindnessTemplate } from "@/app/templates/kindness/index";
 import { courageTemplate } from "@/app/templates/courage";
 
 export const storyTemplates = {
-  kindness: kindnessTemplate,
+  kindness: getKindnessTemplate,
   courage: courageTemplate,
 };

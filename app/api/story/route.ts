@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { kindnessTemplate } from "@/app/templates/kindness";
 import { PageId } from "@/lib/pages";
 import { loadStoryTemplate, getArchetypeConfig } from "@/lib/story/storyLoader";
 
@@ -11,6 +10,8 @@ type StoryPage = {
   html: string;
   pageId: PageId;
 };
+
+type Gender = "girl" | "boy";
 
 /* ===============================
    Minimal HTML escaping
@@ -43,7 +44,19 @@ function fillTemplate(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { archetypeId, heroName, friendName } = body;
+    const {
+      archetypeId,
+      heroName,
+      friendName,
+      heroGender,
+      friendGender,
+    } = body as {
+      archetypeId?: string;
+      heroName?: string;
+      friendName?: string;
+      heroGender?: Gender;
+      friendGender?: Gender;
+    };
 
     if (!heroName || !friendName) {
       return NextResponse.json(
@@ -52,18 +65,26 @@ export async function POST(req: Request) {
       );
     }
 
-    let template = kindnessTemplate;
-    let title = `Добрината на ${escapeHtml(heroName)}`;
-
-    if (archetypeId) {
-      template = await loadStoryTemplate(archetypeId);
-
-      const archetypeConfig = getArchetypeConfig(archetypeId);
-      title =
-        archetypeConfig.id === "kindness"
-          ? `Добрината на ${escapeHtml(heroName)}`
-          : `${archetypeConfig.title} — ${escapeHtml(heroName)}`;
+    if (!heroGender || !friendGender) {
+      return NextResponse.json(
+        { error: "Missing heroGender or friendGender" },
+        { status: 400 }
+      );
     }
+
+    const resolvedArchetypeId = archetypeId || "kindness";
+
+    const template = await loadStoryTemplate(
+      resolvedArchetypeId,
+      heroGender,
+      friendGender
+    );
+
+    const archetypeConfig = getArchetypeConfig(resolvedArchetypeId);
+    const title =
+      archetypeConfig.id === "kindness"
+        ? `Добрината на ${escapeHtml(heroName)}`
+        : `${archetypeConfig.title} — ${escapeHtml(heroName)}`;
 
     const fullHtml = fillTemplate(template, {
       heroName,
